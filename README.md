@@ -12,7 +12,7 @@
 <a href="https://lixiny.github.io/" style="color: maroon; text-decoration: none; font-style: italic;">Lixin Yang&dagger;</a><sup></sup>
 
 ## 🛫 Getting Started
-
+You can also refer [3D Dense Policy Code](https://github.com/Selen-Suyue/DensePolicy/)
 ### 💻 Installation
 
 Please following the [installation guide](assets/docs/INSTALL.md) to install the `dsp` conda environments and the dependencies, as well as the real robot environments. Also, remember to adjust the constant parameters in `dataset/constants.py` and `utils/constants.py` according to your own environment.
