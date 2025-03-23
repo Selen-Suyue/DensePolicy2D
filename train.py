@@ -126,7 +126,7 @@ def train(args_override):
         )
 
     # policy
-    if RANK == 0: print("Loading ACT policy ...")
+    if RANK == 0: print("Loading DSP policy ...")
     policy = DSP(
         num_action = args.num_action,
         input_dim = 6,
@@ -188,14 +188,13 @@ def train(args_override):
             imgtop = data['colors_list']
             imghand = data['hand_colors_list']
             action_data = data['action_normalized']
-            imgtop, imghand, action_data = imgtop.to(device), imghand.to(device), action_data.to(device)
-            
-            obj_data = None
-
+            qpos_data = data["qpos_normalized"]
+            imgtop, imghand, action_data,qpos_data = imgtop.to(device), imghand.to(device), action_data.to(device),qpos_data.to(device)
             
             loss = policy(imgtop=imgtop,
                             imghand=imghand,
                             actions = action_data,
+                            qpos = qpos_data,
                             batch_size = action_data.shape[0])
                 # backward
             loss.backward()

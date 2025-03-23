@@ -22,7 +22,7 @@ from utils.constants import *
 from utils.training import set_seed
 from dataset.projector import Projector
 from utils.ensemble import EnsembleBuffer
-from utils.transformation import rotation_transform
+from utils.transformation import rotation_transform, xyz_rot_transform
 
 default_args = edict({
     "ckpt": None,
@@ -211,6 +211,14 @@ def evaluate(args_override):
             prev_width = None
             for t in range(args.max_steps):
                 if t % args.num_inference_step == 0:
+                    qpos_tcp = agent.get_tcp_pose()[None]
+                    qpos_tcp = xyz_rot_transform(qpos_tcp, from_rep = "quaternion", to_rep = "rotation_6d")
+                    qpos_tcp = projector.project_tcp_to_camera_coord(qpos_tcp, cam = agent.camera_serial, rotation_rep = "rotation_6d")
+                    qpos_gripper_width = decode_gripper_width(agent.get_gripper_width())[None]
+                    qpos = np.concatenate((qpos_tcp, qpos_gripper_width), axis=-1)
+                    qpos = qpos.astype(np.float32)
+                    qpos = normalize_tcp(qpos)
+                    qpos = torch.from_numpy(qpos).to(device)
                     # pre-process inputs
                     colors, depths = agent.get_observation()
                     if args.vis:
@@ -252,6 +260,7 @@ def evaluate(args_override):
                         imgtop=colors,
                         imghand=colors_hand,
                         actions = None,
+                        qpos = qpos,
                         batch_size = 1,
                     ).squeeze(0).cpu().numpy()
                     # unnormalize predicted actions
@@ -328,6 +337,17 @@ def evaluate(args_override):
     if video_save is not None:
         video_save.close()
 
+def decode_gripper_width(gripper_width):
+    # return gripper_width / 1000. * 0.095
+    # robotiq-85: 0.0000 - 0.0085
+    #                255 -      0
+    return (1. - gripper_width / 255.) * 0.085
+
+def normalize_tcp(tcp_list):
+        ''' tcp_list: [T, 3(trans) + 6(rot) + 1(width)]'''
+        tcp_list[:, :3] = (tcp_list[:, :3] - TRANS_MIN) / (TRANS_MAX - TRANS_MIN) * 2 - 1
+        tcp_list[:, -1] = tcp_list[:, -1] / MAX_GRIPPER_WIDTH * 2 - 1
+        return tcp_list
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

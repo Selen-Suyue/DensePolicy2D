@@ -15,7 +15,7 @@ from dataset.constants import *
 from dataset.projector import Projector
 from utils.transformation import rot_trans_mat, apply_mat_to_pose, apply_mat_to_pcd, xyz_rot_transform
 
-NUM_DEMO = 47
+NUM_DEMO = 50
 RECORD_METAINFO_FILEDIR = "data/record_metainfo"
 CALIB_FILEDIR = "data/common/calib_mocap/main/rise_calib"
 MOCAP_FILEDIR = "data/mocap_data"
@@ -161,7 +161,8 @@ class RealWorldDataset(Dataset):
                     frame_begin = max(0, cur_idx - num_obs + 1) #cur id
                     frame_end = min(len(frame_ids), cur_idx + num_action + 1)
                     obs_frame_ids = frame_ids[:1] * obs_pad_before + frame_ids[frame_begin: cur_idx + 1]
-                    action_frame_ids = frame_ids[cur_idx + 1: frame_end] + frame_ids[-1:] * action_pad_after
+                    # NOTE actions has num+1 for the first action as qpos!!!!
+                    action_frame_ids = frame_ids[cur_idx: frame_end] + frame_ids[-1:] * action_pad_after
                     obs_frame_ids_list.append(obs_frame_ids)
                     action_frame_ids_list.append(action_frame_ids)
                    
@@ -343,13 +344,20 @@ class RealWorldDataset(Dataset):
 
         # convert to torch
         actions = torch.from_numpy(actions).float()
+        qpos = actions[0]
+        actions = actions [1:]
+
         actions_normalized = torch.from_numpy(actions_normalized).float()
+        qpos_normalized = actions_normalized[0]
+        actions_normalized = actions_normalized[1:] 
 
         ret_dict = {
             'colors_list': colors_list,
             'hand_colors_list': hand_colors_list,
             'action': actions,
-            'action_normalized': actions_normalized
+            'action_normalized': actions_normalized,
+            "qpos" : qpos,
+            "qpos_normalized" : qpos_normalized,
         }
 
         if self.with_obj_action:

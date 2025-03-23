@@ -36,10 +36,15 @@ class DSP(nn.Module):
         self.action_projection = nn.Linear(obs_feature_dim, action_dim)
         self.cross_attention = BertModel(config)
         self.upsample = nn.Upsample(scale_factor=2, mode='linear')
-        
+        self.qpos_projection = nn.Linear(action_dim, obs_feature_dim)
 
+    def process_qpos(self, qpos):
+        qpos_masked = random_mask_qpos(qpos)
+        qpos_projected = self.qpos_projection(qpos_masked) 
+        qpos_projected = qpos_projected.unsqueeze(1)  
+        return qpos_projected
         
-    def forward(self, imgtop, imghand, actions=None, batch_size=24):
+    def forward(self, imgtop, imghand, actions=None, qpos=None, batch_size=24):
 
         batch_size, cam_len, height, width, channels = imgtop.shape
         imgtop = imgtop.float()/255.0
@@ -50,13 +55,16 @@ class DSP(nn.Module):
         
         imgtop_features = self.resnet18_cam1(imgtop_transformed)
         imghand_features = self.resnet18_cam2(imghand_transformed)
-
+        
         readout = torch.cat((imgtop_features, imghand_features), dim=-1)
+
+        condition_qpos = self.process_qpos(qpos) 
+        condition =  readout.unsqueeze(1)
+        condition = torch.cat([condition, condition_qpos], dim=1)  
+
+        action_pred = torch.zeros(condition.size(0), 1, condition.size(2), device=condition.device)
         
         if actions is not None:
-            condition =  readout.unsqueeze(1)
-            action_pred = torch.zeros(condition.size(0), 1, condition.size(2), device=condition.device)
-        
             while action_pred.shape[1] < actions.shape[1]: 
 
                 action_pred = self.upsample(action_pred.transpose(1, 2)).transpose(1, 2)
@@ -74,9 +82,6 @@ class DSP(nn.Module):
             return loss
         else:
             with torch.no_grad():
-                condition =  readout.unsqueeze(1)
-                action_pred = torch.zeros(condition.size(0), 1, condition.size(2), device=condition.device)
-
                 while action_pred.shape[1] < self.num_action: 
 
                     action_pred = self.upsample(action_pred.transpose(1, 2)).transpose(1, 2)
@@ -182,3 +187,8 @@ class RestNet18(nn.Module):
         out = out.reshape(x.shape[0], -1)
         out = self.fc(out)
         return out
+    
+def random_mask_qpos(qpos,mask_ratio=0.3):
+        mask = (torch.rand_like(qpos) > mask_ratio).float()  
+        qpos_masked = qpos * mask
+        return qpos_masked

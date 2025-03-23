@@ -3,7 +3,7 @@ import numpy as np
 from utils.constants import *
 
 
-TO_TENSOR_KEYS = ['colors_list', 'hand_colors_list', 'action', 'action_normalized', 'action_obj_normalized']
+TO_TENSOR_KEYS = ['colors_list', 'hand_colors_list', 'action', 'action_normalized', 'action_obj_normalized', 'qpos', 'qpos_normalized']
 
 # camera intrinsics
 INTRINSICS = {
