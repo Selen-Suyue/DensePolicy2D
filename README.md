@@ -12,7 +12,7 @@
 <a href="https://lixiny.github.io/" style="color: maroon; text-decoration: none; font-style: italic;">Lixin Yang&dagger;</a><sup></sup>
 
 ## 🛫 Getting Started
-
+You can also refer [3D Dense Policy Code](https://github.com/Selen-Suyue/DensePolicy/).
 ### 💻 Installation
 
 Please following the [installation guide](assets/docs/INSTALL.md) to install the `dsp` conda environments and the dependencies, as well as the real robot environments. Also, remember to adjust the constant parameters in `dataset/constants.py` and `utils/constants.py` according to your own environment.
@@ -46,11 +46,11 @@ bash eval.sh
 ## ✍️ Citation
 
 ```bibtex
-@misc{DensePolicy,
-      title={Dense Policy: Bidirectional Autoregressive Learning of Actions}, 
-      author={Yue Su and Xinyu Zhan and Hongjie Fang and Han Xue and Hao-Shu Fang and Yong-Lu Li and Cewu Lu and Lixin Yang},
-      year={2025},
-      archivePrefix={arXiv}
+@article{su2025dense,
+  title={Dense Policy: Bidirectional Autoregressive Learning of Actions},
+  author={Su, Yue and Zhan, Xinyu and Fang, Hongjie and Xue, Han and Fang, Hao-Shu and Li, Yong-Lu and Lu, Cewu and Yang, Lixin},
+  journal={arXiv preprint arXiv:2503.13217},
+  year={2025}
 }
 ```
 
