@@ -50,6 +50,8 @@ class DSP(nn.Module):
         imgtop = imgtop.float()/255.0
         imghand = imghand.float()/255.0
 
+        imgtop = imgtop.permute(0,1,4,2,3)
+        imghand = imghand.permute(0,1,4,2,3)
         imgtop_transformed = self.transform(imgtop.reshape(-1, channels, height, width))
         imghand_transformed = self.transform(imghand.reshape(-1, channels, height, width))
         
